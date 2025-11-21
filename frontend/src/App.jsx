@@ -8,6 +8,7 @@ import CreateTrip from './pages/CreateTrip';
 import TripDetails from './pages/TripDetails';
 import AddActivity from './pages/AddActivity';
 import EditTrip from './pages/EditTrip';
+import EditActivity from './pages/EditActivity';
 import ProtectedRoute from './components/ProtectedRoute';
 import Home from './pages/Home';
 
@@ -81,8 +82,12 @@ function App() {
           }
         />
         <Route
-          path="/"
-          element={<Home />}
+          path="/trips/:id/activities/:activityId/edit"
+          element={
+            <ProtectedRoute>
+              <EditActivity />
+            </ProtectedRoute>
+          }
         />
 
         {/* Default Route */}

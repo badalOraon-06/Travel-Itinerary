@@ -5,6 +5,7 @@ const connectDB = require('./config/db');
 const authRoutes = require('./routes/auth');
 const tripRoutes = require('./routes/trips');
 const activityRoutes = require('./routes/activities');
+const weatherRoutes = require('./routes/weather');
 
 // Load environment variables
 dotenv.config();
@@ -34,6 +35,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/trips', tripRoutes);
 // Activity routes (standalone)
 app.use('/api/activities', activityRoutes);
+// Weather routes
+app.use('/api/weather', weatherRoutes);
 
 // Port from environment or default to 5000
 const PORT = process.env.PORT || 5000;

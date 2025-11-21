@@ -97,20 +97,12 @@ exports.getActivities = async (req, res) => {
 // @access  Private
 exports.getActivity = async (req, res) => {
   try {
-    const activity = await Activity.findById(req.params.id).populate('trip');
-
+    const activity = await Activity.findById(req.params.id);
+    
     if (!activity) {
       return res.status(404).json({
         success: false,
         message: 'Activity not found'
-      });
-    }
-
-    // Check if trip belongs to logged-in user
-    if (activity.trip.user.toString() !== req.user.id) {
-      return res.status(403).json({
-        success: false,
-        message: 'Not authorized to access this activity'
       });
     }
 

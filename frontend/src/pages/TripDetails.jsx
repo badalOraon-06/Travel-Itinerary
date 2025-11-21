@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import Navbar from '../components/Navbar';
+import WeatherCard from '../components/WeatherCard';
 
 const TripDetails = () => {
   const { id } = useParams(); // Get trip ID from URL
@@ -46,6 +47,20 @@ const TripDetails = () => {
       } catch (err) {
         console.error('Error deleting trip:', err);
         alert('Failed to delete trip');
+      }
+    }
+  };
+
+  const handleDeleteActivity = async (activityId) => {
+    if (window.confirm('Are you sure you want to delete this activity?')) {
+      try {
+        await api.delete(`/trips/${id}/activities/${activityId}`);
+        // Refresh data
+        fetchTripDetails();
+        fetchActivities();
+      } catch (err) {
+        console.error('Error deleting activity:', err);
+        alert('Failed to delete activity');
       }
     }
   };
@@ -126,16 +141,16 @@ const TripDetails = () => {
           <div className="grid md:grid-cols-3 gap-6">
             <div>
               <p className="text-gray-600 text-sm mb-1">Total Budget</p>
-              <p className="text-3xl font-bold text-indigo-600">₹{trip.budget.total}</p>
+              <p className="text-3xl font-bold text-indigo-600">₹{trip.budget?.total || 0}</p>
             </div>
             <div>
               <p className="text-gray-600 text-sm mb-1">Spent</p>
-              <p className="text-3xl font-bold text-red-600">₹{trip.budget.spent}</p>
+              <p className="text-3xl font-bold text-red-600">₹{trip.budget?.spent || 0}</p>
             </div>
             <div>
               <p className="text-gray-600 text-sm mb-1">Remaining</p>
               <p className="text-3xl font-bold text-green-600">
-                ₹{trip.budget.total - trip.budget.spent}
+                ₹{(trip.budget?.total || 0) - (trip.budget?.spent || 0)}
               </p>
             </div>
           </div>
@@ -144,25 +159,36 @@ const TripDetails = () => {
             <div className="flex justify-between text-sm text-gray-600 mb-2">
               <span>Budget Usage</span>
               <span>
-                {trip.budget.total > 0
-                  ? Math.round((trip.budget.spent / trip.budget.total) * 100)
+                {(trip.budget?.total || 0) > 0
+                  ? Math.round(((trip.budget?.spent || 0) / trip.budget.total) * 100)
                   : 0}%
               </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-3">
               <div
                 className={`h-3 rounded-full transition-all ${
-                  trip.budget.spent > trip.budget.total
+                  (trip.budget?.spent || 0) > (trip.budget?.total || 0)
                     ? 'bg-red-600'
                     : 'bg-indigo-600'
                 }`}
                 style={{
-                  width: `${Math.min((trip.budget.spent / trip.budget.total) * 100, 100)}%`
+                  width: `${
+                    (trip.budget?.total || 0) > 0
+                      ? Math.min(((trip.budget?.spent || 0) / trip.budget.total) * 100, 100)
+                      : 0
+                  }%`
                 }}
               ></div>
             </div>
           </div>
         </div>
+
+        {/* Weather Section */}
+        <WeatherCard 
+          destination={trip.destination} 
+          startDate={trip.startDate}
+          endDate={trip.endDate}
+        />
 
         {/* Activities Section */}
         <div className="bg-white rounded-lg shadow-md p-6">
@@ -216,21 +242,37 @@ const TripDetails = () => {
                         <p className="text-sm text-gray-700 mt-2">{activity.notes}</p>
                       )}
                     </div>
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                        activity.category === 'sightseeing'
-                          ? 'bg-blue-100 text-blue-800'
-                          : activity.category === 'food'
-                          ? 'bg-orange-100 text-orange-800'
-                          : activity.category === 'accommodation'
-                          ? 'bg-purple-100 text-purple-800'
-                          : activity.category === 'transport'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}
-                    >
-                      {activity.category}
-                    </span>
+                    <div className="flex flex-col gap-2 ml-4">
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                          activity.category === 'sightseeing'
+                            ? 'bg-blue-100 text-blue-800'
+                            : activity.category === 'food'
+                            ? 'bg-orange-100 text-orange-800'
+                            : activity.category === 'accommodation'
+                            ? 'bg-purple-100 text-purple-800'
+                            : activity.category === 'transport'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}
+                      >
+                        {activity.category}
+                      </span>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => navigate(`/trips/${id}/activities/${activity._id}/edit`)}
+                          className="text-indigo-600 hover:text-indigo-800 text-sm font-semibold"
+                        >
+                          ✏️ Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteActivity(activity._id)}
+                          className="text-red-600 hover:text-red-800 text-sm font-semibold"
+                        >
+                          🗑️ Delete
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}

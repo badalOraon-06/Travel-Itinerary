@@ -1,7 +1,11 @@
 import axios from 'axios';
 
-// Base URL for API - change this to your backend URL
-const API_URL = 'http://localhost:5000/api';
+// Base URL for API - uses environment variable
+// In development: http://localhost:5000/api
+// In production: Your Render backend URL
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+console.log('🌐 API URL:', API_URL); // Helpful for debugging
 
 // Create axios instance
 const api = axios.create({

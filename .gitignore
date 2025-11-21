@@ -9,6 +9,13 @@ yarn-error.log*
 .env.local
 .env.development
 .env.production
+.env.test
+backend/.env
+frontend/.env
+# But keep .env.example files for reference
+!.env.example
+!backend/.env.example
+!frontend/.env.example
 
 # Production builds
 /frontend/build

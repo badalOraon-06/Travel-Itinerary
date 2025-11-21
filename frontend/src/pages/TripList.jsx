@@ -105,18 +105,24 @@ const TripList = () => {
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-sm text-gray-600">💰 Budget</span>
                       <span className="text-sm font-semibold text-gray-800">
-                        ₹{trip.budget.spent} / ₹{trip.budget.total}
+                        ₹{trip.budget?.spent || 0} / ₹{trip.budget?.total || 0}
                       </span>
                     </div>
                     {/* Budget Progress Bar */}
                     <div className="w-full bg-gray-200 rounded-full h-2">
                       <div
                         className="bg-indigo-600 h-2 rounded-full transition-all"
-                        style={{ width: `${Math.min((trip.budget.spent / trip.budget.total) * 100, 100)}%` }}
+                        style={{ 
+                          width: `${
+                            trip.budget?.total > 0 
+                              ? Math.min(((trip.budget?.spent || 0) / trip.budget.total) * 100, 100) 
+                              : 0
+                          }%` 
+                        }}
                       ></div>
                     </div>
                     <p className="text-xs text-gray-500 mt-1">
-                      ₹{trip.budget.total - trip.budget.spent} remaining
+                      ₹{(trip.budget?.total || 0) - (trip.budget?.spent || 0)} remaining
                     </p>
                   </div>
 

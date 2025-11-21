@@ -47,24 +47,67 @@ travel-itinerary-planner/
 ### Prerequisites
 
 - Node.js v18+
-- MongoDB Atlas account or local MongoDB
+- MongoDB Atlas account
 - npm or yarn
+- Git & GitHub account
 
-### Installation
+### Local Development
 
-**Coming soon** - Setup instructions will be added as we build the project.
+1. **Clone the repository**
+
+```bash
+git clone https://github.com/YOUR_USERNAME/travel-itinerary-planner.git
+cd travel-itinerary-planner
+```
+
+2. **Set up Backend**
+
+```bash
+cd backend
+npm install
+cp .env.example .env
+# Edit .env with your MongoDB URI and JWT secret
+npm run dev
+```
+
+3. **Set up Frontend**
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+### Deployment
+
+See deployment guides:
+
+- 📘 [Full Deployment Guide](./DEPLOYMENT_GUIDE.md) - Comprehensive tutorial
+- ⚡ [Quick Start Deploy](./QUICK_START_DEPLOY.md) - Deploy in 30 minutes
+- ✅ [Deployment Checklist](./DEPLOYMENT_CHECKLIST.md) - Pre-flight checks
 
 ## 📝 Development Status
 
-🚧 **Currently in Development**
+✅ **Ready for Deployment!**
 
 - [x] Project planning and setup
-- [ ] Backend API development
-- [ ] Frontend development
-- [ ] Maps integration
-- [ ] Guide booking system
-- [ ] Testing
-- [ ] Deployment
+- [x] Backend API development
+- [x] Frontend development
+- [x] User authentication
+- [x] Trip management
+- [x] Activity management
+- [x] Budget tracking
+- [x] Responsive design
+- [x] Deployment configuration
+- [ ] Maps integration (future)
+- [ ] Guide booking system (future)
+
+## 🌐 Live Demo
+
+**Coming soon** - Add your deployed URLs here:
+
+- Frontend: `https://your-app.vercel.app`
+- Backend: `https://your-backend.onrender.com`
 
 ## 👨‍💻 Author
 
