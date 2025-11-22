@@ -9,6 +9,8 @@ import TripDetails from './pages/TripDetails';
 import AddActivity from './pages/AddActivity';
 import EditTrip from './pages/EditTrip';
 import EditActivity from './pages/EditActivity';
+import Profile from './pages/Profile';
+import CalendarView from './pages/CalendarView';
 import ProtectedRoute from './components/ProtectedRoute';
 import Home from './pages/Home';
 
@@ -86,6 +88,22 @@ function App() {
           element={
             <ProtectedRoute>
               <EditActivity />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/calendar"
+          element={
+            <ProtectedRoute>
+              <CalendarView />
             </ProtectedRoute>
           }
         />

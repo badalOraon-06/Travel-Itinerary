@@ -9,7 +9,8 @@ const CreateTrip = () => {
     description: '',
     startDate: '',
     endDate: '',
-    budget: { total: 0 }
+    budget: { total: 0 },
+    status: 'planning'
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -140,6 +141,29 @@ const CreateTrip = () => {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 />
               </div>
+            </div>
+
+            {/* Status */}
+            <div className="mb-4">
+              <label className="block text-gray-700 font-semibold mb-2">
+                Trip Status *
+              </label>
+              <select
+                name="status"
+                value={formData.status}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              >
+                <option value="planning">🟡 Planning</option>
+                <option value="confirmed">🔵 Confirmed</option>
+                <option value="ongoing">🟢 Ongoing</option>
+                <option value="completed">🟣 Completed</option>
+                <option value="cancelled">🔴 Cancelled</option>
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                Select the current status of your trip
+              </p>
             </div>
 
             {/* Total Budget */}

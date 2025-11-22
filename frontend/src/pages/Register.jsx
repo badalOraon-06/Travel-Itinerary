@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 
 const Register = () => {
   const navigate = useNavigate();
-  const { register, error } = useAuth();
+  const { register } = useAuth();
   
   const [formData, setFormData] = useState({
     name: '',
@@ -13,39 +13,50 @@ const Register = () => {
     confirmPassword: '',
   });
   const [loading, setLoading] = useState(false);
-  const [validationError, setValidationError] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
-    setValidationError('');
+    // Clear error when user starts typing
+    if (errorMessage) setErrorMessage('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrorMessage('');
     
     // Validate passwords match
     if (formData.password !== formData.confirmPassword) {
-      setValidationError('Passwords do not match');
+      setErrorMessage('Passwords do not match');
       return;
     }
 
     // Validate password length
     if (formData.password.length < 6) {
-      setValidationError('Password must be at least 6 characters');
+      setErrorMessage('Password must be at least 6 characters');
       return;
     }
 
     setLoading(true);
 
-    const result = await register(formData.name, formData.email, formData.password);
-    
-    setLoading(false);
-
-    if (result.success) {
-      navigate('/dashboard');
+    try {
+      const result = await register(formData.name, formData.email, formData.password);
+      
+      if (result.success) {
+        // Small delay to ensure state is updated
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 100);
+      } else {
+        setErrorMessage(result.message || 'Registration failed. Please try again.');
+        setLoading(false);
+      }
+    } catch (err) {
+      setErrorMessage('An unexpected error occurred. Please try again.');
+      setLoading(false);
     }
   };
 
@@ -64,9 +75,9 @@ const Register = () => {
         <div className="bg-white rounded-lg shadow-xl p-8">
           <h2 className="text-2xl font-semibold text-gray-800 mb-6">Register</h2>
 
-          {(error || validationError) && (
+          {errorMessage && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
-              {error || validationError}
+              {errorMessage}
             </div>
           )}
 

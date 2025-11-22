@@ -4,31 +4,44 @@ import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login, error } = useAuth();
+  const { login } = useAuth();
   
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
+    // Clear error when user starts typing
+    if (errorMessage) setErrorMessage('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setErrorMessage('');
 
-    const result = await login(formData.email, formData.password);
-    
-    setLoading(false);
-
-    if (result.success) {
-      navigate('/dashboard');
+    try {
+      const result = await login(formData.email, formData.password);
+      
+      if (result.success) {
+        // Small delay to ensure state is updated
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 100);
+      } else {
+        setErrorMessage(result.message || 'Login failed. Please check your credentials.');
+        setLoading(false);
+      }
+    } catch (err) {
+      setErrorMessage('An unexpected error occurred. Please try again.');
+      setLoading(false);
     }
   };
 
@@ -47,9 +60,9 @@ const Login = () => {
         <div className="bg-white rounded-lg shadow-xl p-8">
           <h2 className="text-2xl font-semibold text-gray-800 mb-6">Login</h2>
 
-          {error && (
+          {errorMessage && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
-              {error}
+              {errorMessage}
             </div>
           )}
 

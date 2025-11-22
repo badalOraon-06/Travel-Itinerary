@@ -9,6 +9,12 @@ const TripList = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
+  // Filter and search states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('startDate');
+  const [showFilters, setShowFilters] = useState(false);
+
   useEffect(() => {
     const fetchTrips = async () => {
       try {
@@ -28,6 +34,46 @@ const TripList = () => {
 
     fetchTrips();
   }, []);
+
+  // Filter and sort trips
+  const getFilteredAndSortedTrips = () => {
+    let filtered = [...trips];
+
+    // Search filter
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        (trip) =>
+          trip.title.toLowerCase().includes(term) ||
+          trip.destination.toLowerCase().includes(term)
+      );
+    }
+
+    // Status filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter((trip) => trip.status === statusFilter);
+    }
+
+    // Sort
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'startDate':
+          return new Date(a.startDate) - new Date(b.startDate);
+        case 'endDate':
+          return new Date(a.endDate) - new Date(b.endDate);
+        case 'title':
+          return a.title.localeCompare(b.title);
+        case 'budget':
+          return (b.budget?.total || 0) - (a.budget?.total || 0);
+        default:
+          return 0;
+      }
+    });
+
+    return filtered;
+  };
+
+  const filteredTrips = getFilteredAndSortedTrips();
 
   if (loading) {
     return (
@@ -52,7 +98,7 @@ const TripList = () => {
       <Navbar />
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-gray-800">My Trips</h1>
           <button
             onClick={() => navigate('/trips/new')}
@@ -61,6 +107,102 @@ const TripList = () => {
             + Create New Trip
           </button>
         </div>
+
+        {/* Search and Filter Section */}
+        {trips.length > 0 && (
+          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+            {/* Search Bar */}
+            <div className="mb-4">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="🔍 Search by title or destination..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                />
+                <span className="absolute left-3 top-3.5 text-gray-400">🔍</span>
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm('')}
+                    className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Filter Toggle Button */}
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="text-indigo-600 hover:text-indigo-800 font-semibold mb-3 flex items-center gap-2"
+            >
+              {showFilters ? '▼' : '▶'} Filters & Sort
+            </button>
+
+            {/* Filters (Collapsible) */}
+            {showFilters && (
+              <div className="grid md:grid-cols-3 gap-4 pt-4 border-t border-gray-200">
+                {/* Status Filter */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Status
+                  </label>
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <option value="all">All Status</option>
+                    <option value="planning">Planning</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="ongoing">Ongoing</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
+                </div>
+
+                {/* Sort By */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Sort By
+                  </label>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <option value="startDate">Start Date</option>
+                    <option value="endDate">End Date</option>
+                    <option value="title">Title (A-Z)</option>
+                    <option value="budget">Budget (High to Low)</option>
+                  </select>
+                </div>
+
+                {/* Clear Filters */}
+                <div className="flex items-end">
+                  <button
+                    onClick={() => {
+                      setSearchTerm('');
+                      setStatusFilter('all');
+                      setSortBy('startDate');
+                    }}
+                    className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-semibold transition"
+                  >
+                    Clear All Filters
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Results Count */}
+            <div className="mt-4 text-sm text-gray-600">
+              Showing <span className="font-semibold">{filteredTrips.length}</span> of{' '}
+              <span className="font-semibold">{trips.length}</span> trip(s)
+            </div>
+          </div>
+        )}
 
         {/* Empty State */}
         {trips.length === 0 ? (
@@ -73,10 +215,25 @@ const TripList = () => {
               Create Your First Trip
             </button>
           </div>
+        ) : filteredTrips.length === 0 ? (
+          // No results from filters
+          <div className="text-center py-12 bg-white rounded-lg shadow-md">
+            <p className="text-gray-500 text-lg mb-4">No trips match your filters</p>
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                setStatusFilter('all');
+                setSortBy('startDate');
+              }}
+              className="text-indigo-600 hover:text-indigo-800 font-semibold"
+            >
+              Clear Filters
+            </button>
+          </div>
         ) : (
           // Trip cards
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {trips.map((trip) => (
+            {filteredTrips.map((trip) => (
               <div
                 key={trip._id}
                 onClick={() => navigate(`/trips/${trip._id}`)}
@@ -130,10 +287,16 @@ const TripList = () => {
                   <div className="flex justify-between items-center">
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                        trip.status === 'upcoming'
+                        trip.status === 'planning'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : trip.status === 'confirmed'
                           ? 'bg-blue-100 text-blue-800'
                           : trip.status === 'ongoing'
                           ? 'bg-green-100 text-green-800'
+                          : trip.status === 'completed'
+                          ? 'bg-purple-100 text-purple-800'
+                          : trip.status === 'cancelled'
+                          ? 'bg-red-100 text-red-800'
                           : 'bg-gray-100 text-gray-800'
                       }`}
                     >

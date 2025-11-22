@@ -6,6 +6,7 @@ const authRoutes = require('./routes/auth');
 const tripRoutes = require('./routes/trips');
 const activityRoutes = require('./routes/activities');
 const weatherRoutes = require('./routes/weather');
+const geocodingRoutes = require('./routes/geocoding');
 
 // Load environment variables
 dotenv.config();
@@ -37,6 +38,8 @@ app.use('/api/trips', tripRoutes);
 app.use('/api/activities', activityRoutes);
 // Weather routes
 app.use('/api/weather', weatherRoutes);
+// Geocoding routes
+app.use('/api/geocode', geocodingRoutes);
 
 // Port from environment or default to 5000
 const PORT = process.env.PORT || 5000;

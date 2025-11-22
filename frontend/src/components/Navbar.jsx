@@ -38,6 +38,18 @@ const Navbar = () => {
             >
               My Trips
             </button>
+            <button
+              onClick={() => navigate('/calendar')}
+              className="text-gray-700 hover:text-indigo-600 font-medium transition"
+            >
+              Calendar
+            </button>
+            <button
+              onClick={() => navigate('/profile')}
+              className="text-gray-700 hover:text-indigo-600 font-medium transition"
+            >
+              Profile
+            </button>
             
             {/* User Info & Logout */}
             <div className="flex items-center gap-4 ml-4 pl-4 border-l border-gray-300">

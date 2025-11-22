@@ -14,16 +14,37 @@ const EditActivity = () => {
     endTime: '',
     cost: 0,
     category: 'sightseeing',
-    notes: ''
+    notes: '',
+    location: {
+      address: '',
+      coordinates: {
+        latitude: 0,
+        longitude: 0
+      }
+    }
   });
   
+  const [trip, setTrip] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [geocoding, setGeocoding] = useState(false);
 
   useEffect(() => {
+    fetchTrip();
     fetchActivity();
-  }, [activityId]);
+  }, [id, activityId]);
+
+  const fetchTrip = async () => {
+    try {
+      const response = await api.get(`/trips/${id}`);
+      setTrip(response.data.data);
+    } catch (err) {
+      console.error('Error fetching trip:', err);
+      alert('Failed to load trip details');
+      navigate('/trips');
+    }
+  };
 
   const fetchActivity = async () => {
     try {
@@ -37,7 +58,14 @@ const EditActivity = () => {
         endTime: activity.endTime,
         cost: activity.cost,
         category: activity.category,
-        notes: activity.notes || ''
+        notes: activity.notes || '',
+        location: {
+          address: activity.location?.address || '',
+          coordinates: {
+            latitude: activity.location?.coordinates?.latitude || 0,
+            longitude: activity.location?.coordinates?.longitude || 0
+          }
+        }
       });
       setLoading(false);
     } catch (err) {
@@ -49,7 +77,58 @@ const EditActivity = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    
+    if (name === 'address') {
+      setFormData({
+        ...formData,
+        location: { ...formData.location, address: value }
+      });
+    } else if (name === 'latitude' || name === 'longitude') {
+      setFormData({
+        ...formData,
+        location: {
+          ...formData.location,
+          coordinates: {
+            ...formData.location.coordinates,
+            [name]: Number(value) || 0
+          }
+        }
+      });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
+  };
+
+  const handleGeocode = async () => {
+    if (!formData.location.address) {
+      setError('Please enter an address first');
+      return;
+    }
+
+    try {
+      setGeocoding(true);
+      setError('');
+      const response = await api.get('/geocode', {
+        params: { address: formData.location.address }
+      });
+      
+      const { latitude, longitude, displayName } = response.data.data;
+      
+      setFormData({
+        ...formData,
+        location: {
+          address: displayName, // Use full formatted address
+          coordinates: { latitude, longitude }
+        }
+      });
+      
+      alert(`✅ Location found!\nLat: ${latitude}\nLng: ${longitude}`);
+    } catch (err) {
+      console.error('Geocoding error:', err);
+      setError('Could not find location. Try a more specific address or enter coordinates manually.');
+    } finally {
+      setGeocoding(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -61,10 +140,21 @@ const EditActivity = () => {
       return;
     }
 
+    // Validate activity date is within trip date range
+    const activityDate = new Date(formData.date);
+    const tripStartDate = new Date(trip.startDate);
+    const tripEndDate = new Date(trip.endDate);
+    
+    if (activityDate < tripStartDate || activityDate > tripEndDate) {
+      setError(`Activity date must be between ${tripStartDate.toLocaleDateString()} and ${tripEndDate.toLocaleDateString()}`);
+      return;
+    }
+
     try {
       setSubmitting(true);
       await api.put(`/activities/${activityId}`, formData);
-      navigate(`/trips/${id}`);
+      // Navigate with state to trigger refresh
+      navigate(`/trips/${id}`, { state: { refresh: true } });
     } catch (err) {
       console.error('Update activity error:', err);
       setError(err.response?.data?.message || 'Failed to update activity');
@@ -125,16 +215,21 @@ const EditActivity = () => {
               {/* Date */}
               <div className="mb-4">
                 <label className="block text-gray-700 font-semibold mb-2">
-                  Date *
+                  Date * <span className="text-sm text-gray-500">(Must be between trip dates)</span>
                 </label>
                 <input
                   type="date"
                   name="date"
                   value={formData.date}
                   onChange={handleChange}
+                  min={trip?.startDate?.split('T')[0]}
+                  max={trip?.endDate?.split('T')[0]}
                   required
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  Trip dates: {new Date(trip?.startDate).toLocaleDateString()} - {new Date(trip?.endDate).toLocaleDateString()}
+                </p>
               </div>
 
               {/* Time */}
@@ -201,6 +296,79 @@ const EditActivity = () => {
                     placeholder="0"
                   />
                 </div>
+              </div>
+
+              {/* Location Section */}
+              <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                  📍 Location (Optional - for map display)
+                </h3>
+                
+                {/* Address with Geocode Button */}
+                <div className="mb-3">
+                  <label className="block text-gray-700 font-semibold mb-2">
+                    Address / Place Name
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      name="address"
+                      value={formData.location.address}
+                      onChange={handleChange}
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                      placeholder="e.g., Calangute Beach, Goa"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleGeocode}
+                      disabled={geocoding || !formData.location.address}
+                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition disabled:bg-gray-400 whitespace-nowrap"
+                    >
+                      {geocoding ? '🔍 Finding...' : '🔍 Find Coordinates'}
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-600 mt-1">
+                    💡 Enter a place name and click "Find Coordinates" to auto-fill lat/lng
+                  </p>
+                </div>
+
+                {/* Coordinates (Auto-filled or Manual) */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-gray-700 font-semibold mb-2">
+                      Latitude
+                    </label>
+                    <input
+                      type="number"
+                      name="latitude"
+                      value={formData.location.coordinates.latitude}
+                      onChange={handleChange}
+                      step="any"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-gray-50"
+                      placeholder="Auto-filled"
+                      readOnly={geocoding}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-gray-700 font-semibold mb-2">
+                      Longitude
+                    </label>
+                    <input
+                      type="number"
+                      name="longitude"
+                      value={formData.location.coordinates.longitude}
+                      onChange={handleChange}
+                      step="any"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-gray-50"
+                      placeholder="Auto-filled"
+                      readOnly={geocoding}
+                    />
+                  </div>
+                </div>
+                
+                <p className="text-xs text-gray-500 mt-2 italic">
+                  Coordinates are auto-filled when you use "Find Coordinates" button
+                </p>
               </div>
 
               {/* Notes */}

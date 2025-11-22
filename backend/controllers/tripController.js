@@ -5,7 +5,7 @@ const Trip = require('../models/Trip');
 // @access  Private
 exports.createTrip = async (req, res) => {
   try {
-    const { title, destination, description, startDate, endDate, budget } = req.body;
+    const { title, destination, description, startDate, endDate, budget, status } = req.body;
 
     // Validate required fields
     if (!title || !destination || !startDate || !endDate) {
@@ -23,6 +23,7 @@ exports.createTrip = async (req, res) => {
       startDate,
       endDate,
       budget: budget || { total: 0, spent: 0 },
+      status: status || 'planning',
       user: req.user.id // From auth middleware
     });
 
@@ -106,10 +107,14 @@ exports.getTrip = async (req, res) => {
 // @access  Private
 exports.updateTrip = async (req, res) => {
   try {
+    console.log('Update trip request:', req.params.id);
+    console.log('Update data:', req.body);
+    
     let trip = await Trip.findById(req.params.id);
 
     // Check if trip exists
     if (!trip) {
+      console.log('Trip not found:', req.params.id);
       return res.status(404).json({
         success: false,
         message: 'Trip not found'
@@ -118,10 +123,23 @@ exports.updateTrip = async (req, res) => {
 
     // Check if trip belongs to logged-in user
     if (trip.user.toString() !== req.user.id) {
+      console.log('Unauthorized access attempt');
       return res.status(403).json({
         success: false,
         message: 'Not authorized to update this trip'
       });
+    }
+
+    // Manual validation for dates if both are provided
+    if (req.body.startDate && req.body.endDate) {
+      const startDate = new Date(req.body.startDate);
+      const endDate = new Date(req.body.endDate);
+      if (endDate < startDate) {
+        return res.status(400).json({
+          success: false,
+          message: 'End date must be after start date'
+        });
+      }
     }
 
     // Update trip
@@ -130,10 +148,11 @@ exports.updateTrip = async (req, res) => {
       req.body,
       {
         new: true,           // Return updated document
-        runValidators: true  // Run model validations
+        runValidators: false // Disable mongoose validators to avoid issues with partial updates
       }
     );
 
+    console.log('Trip updated successfully:', trip);
     res.status(200).json({
       success: true,
       message: 'Trip updated successfully',

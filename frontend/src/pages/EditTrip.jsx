@@ -12,7 +12,8 @@ const EditTrip = () => {
     description: '',
     startDate: '',
     endDate: '',
-    budget: { total: 0 }
+    budget: { total: 0 },
+    status: 'planning'
   });
   
   const [loading, setLoading] = useState(true);
@@ -34,7 +35,11 @@ const EditTrip = () => {
         description: trip.description || '',
         startDate: trip.startDate.split('T')[0],
         endDate: trip.endDate.split('T')[0],
-        budget: { total: trip.budget.total }
+        budget: { 
+          total: trip.budget.total,
+          spent: trip.budget.spent // Include spent amount
+        },
+        status: trip.status || 'planning'
       });
       setLoading(false);
     } catch (err) {
@@ -64,10 +69,28 @@ const EditTrip = () => {
 
     try {
       setSubmitting(true);
-      await api.put(`/trips/${id}`, formData);
+      
+      // Send only the fields that should be updated
+      const updateData = {
+        title: formData.title,
+        destination: formData.destination,
+        description: formData.description,
+        startDate: formData.startDate,
+        endDate: formData.endDate,
+        status: formData.status,
+        budget: {
+          total: Number(formData.budget.total) || 0,
+          spent: Number(formData.budget.spent) || 0 // Include spent to avoid overwriting
+        }
+      };
+      
+      console.log('Sending update data:', updateData);
+      
+      await api.put(`/trips/${id}`, updateData);
       navigate(`/trips/${id}`);
     } catch (err) {
       console.error('Update trip error:', err);
+      console.error('Error response:', err.response?.data);
       setError(err.response?.data?.message || 'Failed to update trip');
     } finally {
       setSubmitting(false);
@@ -177,6 +200,29 @@ const EditTrip = () => {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
+            </div>
+
+            {/* Status */}
+            <div className="mb-4">
+              <label className="block text-gray-700 font-semibold mb-2">
+                Trip Status *
+              </label>
+              <select
+                name="status"
+                value={formData.status}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="planning">🟡 Planning</option>
+                <option value="confirmed">🔵 Confirmed</option>
+                <option value="ongoing">🟢 Ongoing</option>
+                <option value="completed">🟣 Completed</option>
+                <option value="cancelled">🔴 Cancelled</option>
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                Update the current status of your trip
+              </p>
             </div>
 
             {/* Total Budget */}

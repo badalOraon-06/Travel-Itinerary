@@ -27,7 +27,9 @@ const tripSchema = new mongoose.Schema(
       required: [true, 'Please provide an end date'],
       validate: {
         validator: function(value) {
-          // End date must be after start date
+          // End date must be after or equal to start date
+          // During updates, this.startDate might be the old value, so we check if it exists
+          if (!this.startDate) return true; // Skip validation if startDate not available
           return value >= this.startDate;
         },
         message: 'End date must be after start date'

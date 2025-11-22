@@ -24,6 +24,20 @@ exports.createActivity = async (req, res) => {
       });
     }
 
+    // Validate activity date is within trip date range
+    if (req.body.date) {
+      const activityDate = new Date(req.body.date);
+      const tripStartDate = new Date(trip.startDate);
+      const tripEndDate = new Date(trip.endDate);
+      
+      if (activityDate < tripStartDate || activityDate > tripEndDate) {
+        return res.status(400).json({
+          success: false,
+          message: `Activity date must be between ${tripStartDate.toLocaleDateString()} and ${tripEndDate.toLocaleDateString()}`
+        });
+      }
+    }
+
     // Create activity
     const activity = await Activity.create({
       ...req.body,
@@ -32,7 +46,11 @@ exports.createActivity = async (req, res) => {
 
     // Update trip's spent budget if cost is provided
     if (req.body.cost) {
-      trip.budget.spent += req.body.cost;
+      console.log(`💰 Adding cost to budget:`);
+      console.log(`  Previous spent: ₹${trip.budget.spent}`);
+      console.log(`  Activity cost: ₹${req.body.cost}`);
+      trip.budget.spent += Number(req.body.cost);
+      console.log(`  New spent: ₹${trip.budget.spent}`);
       await trip.save();
     }
 
@@ -142,10 +160,30 @@ exports.updateActivity = async (req, res) => {
       });
     }
 
+    // Validate activity date is within trip date range if date is being updated
+    if (req.body.date) {
+      const trip = await Trip.findById(activity.trip._id);
+      const activityDate = new Date(req.body.date);
+      const tripStartDate = new Date(trip.startDate);
+      const tripEndDate = new Date(trip.endDate);
+      
+      if (activityDate < tripStartDate || activityDate > tripEndDate) {
+        return res.status(400).json({
+          success: false,
+          message: `Activity date must be between ${tripStartDate.toLocaleDateString()} and ${tripEndDate.toLocaleDateString()}`
+        });
+      }
+    }
+
     // If cost is being updated, adjust trip budget
     if (req.body.cost !== undefined && req.body.cost !== activity.cost) {
       const trip = await Trip.findById(activity.trip._id);
-      trip.budget.spent = trip.budget.spent - activity.cost + req.body.cost;
+      console.log(`💰 Updating activity cost:`);
+      console.log(`  Previous spent: ₹${trip.budget.spent}`);
+      console.log(`  Old activity cost: ₹${activity.cost}`);
+      console.log(`  New activity cost: ₹${req.body.cost}`);
+      trip.budget.spent = trip.budget.spent - Number(activity.cost) + Number(req.body.cost);
+      console.log(`  New spent: ₹${trip.budget.spent}`);
       await trip.save();
     }
 
@@ -199,7 +237,11 @@ exports.deleteActivity = async (req, res) => {
     // Update trip budget before deleting
     if (activity.cost > 0) {
       const trip = await Trip.findById(activity.trip._id);
-      trip.budget.spent -= activity.cost;
+      console.log(`💰 Deleting activity and updating budget:`);
+      console.log(`  Previous spent: ₹${trip.budget.spent}`);
+      console.log(`  Activity cost to subtract: ₹${activity.cost}`);
+      trip.budget.spent -= Number(activity.cost);
+      console.log(`  New spent: ₹${trip.budget.spent}`);
       await trip.save();
     }
 
