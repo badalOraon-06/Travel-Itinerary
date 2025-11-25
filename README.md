@@ -299,33 +299,6 @@ VITE_API_URL=http://localhost:5000
 
 ---
 
-## 🚢 Deployment
-
-### Backend (Railway/Render/Heroku)
-
-1. Create account on deployment platform
-2. Connect your GitHub repository
-3. Set environment variables in platform dashboard
-4. Deploy backend
-5. Note your backend URL (e.g., `https://your-app.railway.app`)
-
-### Frontend (Vercel/Netlify)
-
-1. Create account on Vercel/Netlify
-2. Connect your GitHub repository
-3. Set build command: `npm run build`
-4. Set build directory: `dist`
-5. Add environment variable: `VITE_API_URL=your_backend_url`
-6. Deploy
-
-### MongoDB Atlas Configuration
-
-- Whitelist deployment server IPs in Network Access
-- Use production connection string in backend .env
-- Enable authentication and use strong credentials
-
----
-
 ## ⚠️ Known Issues
 
 - Weather API has rate limits (1000 calls/day on free tier)
